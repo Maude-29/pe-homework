@@ -5,16 +5,12 @@ jupytext:
   text_representation:
     extension: .md
     format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.19.5
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
   name: python3
-language_info:
-  name: python
-  pygments_lexer: ipython3
-  nbconvert_exporter: python
-nbhosting:
-  title: suite du TP simple avec des images
 ---
 
 # TP images (2/2)
@@ -350,8 +346,6 @@ et dont voici un exemple d'utilisation:
 ````
 
 ```{code-cell} ipython3
-:scrolled: true
-
 # exemple de produit de matrices avec `numpy.dot`
 # le help(np.dot) dit: dot(A, B)[i,j,k,m] = sum(A[i,j,:] * B[k,:,m])
 
@@ -375,12 +369,25 @@ print(f"et le nombre de termes dans chaque `sum()` est {A.shape[-1]} == {B.shape
 
 ```{code-cell} ipython3
 # votre code
+
+def sepia(img): #img est une matrice (l, c, 3) 
+    M = np.array([[0.393, 0.769, 0.189],
+           [0.349, 0.686, 0.169],
+           [0.272, 0.534, 0.131]])
+    M = np.transpose(M)
+    P = np.dot(img, M)
+    return np.clip(P, 0, 255).astype(np.uint8) 
+    #np.clip fonction qui borne les valeurs de P entre 0 et 255 car peut 
+    #dépasser avec le produit matriciel 
 ```
 
 2. Passez l'image `data/les-mines.jpg` en sépia
 
 ```{code-cell} ipython3
 # votre code
+img = plt.imread("data/les-mines.jpg")
+sepia(img)
+plt.imshow(sepia(img))
 ```
 
 Voici ce que vous devriez obtenir avec l'images des Mines
