@@ -5,16 +5,12 @@ jupytext:
   text_representation:
     extension: .md
     format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.19.5
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
   name: python3
-language_info:
-  name: python
-  pygments_lexer: ipython3
-  nbconvert_exporter: python
-nbhosting:
-  title: TP simple avec des images
 ---
 
 # TP images (1/2)
@@ -54,6 +50,9 @@ ou toute autre librairie d'affichage que vous aimez et/ou savez utiliser: `seabo
 
 ```{code-cell} ipython3
 # votre code
+
+import numpy as np
+from matplotlib import pyplot as plt
 ```
 
 2. optionnel - changez la taille par défaut des figures matplotlib
@@ -63,7 +62,9 @@ ou toute autre librairie d'affichage que vous aimez et/ou savez utiliser: `seabo
    il y a plein de façons de le faire, google et/ou stackoverflow sont vos amis...
    ````
 
-+++
+```{code-cell} ipython3
+plt.rcParams["figure.figsize"] = (4, 4) # (largeur, hauteur)
+```
 
 ## création d'une image de couleur
 
@@ -100,31 +101,41 @@ ou toute autre librairie d'affichage que vous aimez et/ou savez utiliser: `seabo
    ```
 
 ```{code-cell} ipython3
-# votre code
+im = np.zeros((91,91,3), dtype=np.uint8)
+plt.imshow(im)
+plt.show()
 ```
 
 2. Transformez le en tableau blanc (en un seul slicing) et affichez-le
 
 ```{code-cell} ipython3
-# votre code
+im[::]=255
+plt.imshow(im)
+plt.show()
 ```
 
 3. Transformez le en tableau vert (en un seul slicing) et affichez-le
 
 ```{code-cell} ipython3
-# votre code
+im[::,::,::]=(0,255,0)
+plt.imshow(im)
+plt.show()
 ```
 
 4. Affichez les valeurs RGB du premier pixel de l'image, et du dernier
 
 ```{code-cell} ipython3
-# votre code
+print("RGB du premier pixel: ", im[0,0,:])
+print("RGB du dernier pixel: ",im[90,90,:])
 ```
 
 5. Faites un quadrillage d'une ligne bleue, toutes les 10 lignes et colonnes et affichez-le
 
 ```{code-cell} ipython3
-# votre code
+im[::,::10,::]=(0,0,255)
+im[::10,::,::]=(0,0,255)
+plt.imshow(im)
+plt.show()
 ```
 
 ## lecture d'une image en couleur
@@ -134,38 +145,57 @@ ou toute autre librairie d'affichage que vous aimez et/ou savez utiliser: `seabo
 1. Avec la fonction `plt.imread` lisez le fichier `data/les-mines.jpg`
 
 ```{code-cell} ipython3
-# votre code
+#help(plt.imread)
+im = plt.imread("data/les-mines.jpg")
 ```
 
 2. Vérifiez si l'objet est modifiable avec `im.flags.writeable`; si il ne l'est pas, copiez l'image
 
 ```{code-cell} ipython3
-# votre code
+im.flags.writeable
+```
+
+```{code-cell} ipython3
+im = np.array(im, copy=True)
 ```
 
 3. Affichez l'image
 
 ```{code-cell} ipython3
-# votre code
+plt.imshow(im)
+plt.show()
 ```
 
 4. Quel est le type de l'objet créé ?
 
 ```{code-cell} ipython3
-# votre code
+type(im)
 ```
 
 5. Quelle est la dimension de l'image ?
 
-+++
+```{code-cell} ipython3
+im.ndim
+```
 
 6. Quelle est la taille de l'image en hauteur et largeur ?
 
 ```{code-cell} ipython3
-# votre code
+im.shape
 ```
 
+- Nombre de lignes (hauteur) = 533
+- Nombre de colonnes (largeur) = 800
+
++++
+
 7. Quel est le nombre d'octets utilisé par pixel ?
+
++++
+
+- 1 octet = 8 bits
+- 1 pixel = 3 entiers 8 bits non signés 
+- Conclusion: un pixel = 3 octets 
 
 +++
 
@@ -173,19 +203,27 @@ ou toute autre librairie d'affichage que vous aimez et/ou savez utiliser: `seabo
 (deux types pour les pixels: entiers non-signés 8 bits ou flottants sur 64 bits)
 
 ```{code-cell} ipython3
-# votre code
+im.dtype 
 ```
 
 9. Quelles sont ses valeurs maximale et minimale des pixels ?
 
-```{code-cell} ipython3
-# votre code
-```
++++
+
+- Valeur max: 255
+- Valeur min: 0
+
+Pour chaque canaux (RGB) des pixels
+
++++
 
 10. Affichez le rectangle de 10 x 10 pixels en haut de l'image
 
 ```{code-cell} ipython3
-# votre code
+im = np.array(im, copy=True)
+im[:10,:10,::]=(0,0,0)
+plt.imshow(im)
+plt.show()
 ```
 
 ## accès à des parties d'image
@@ -195,7 +233,8 @@ ou toute autre librairie d'affichage que vous aimez et/ou savez utiliser: `seabo
 1. Relire l'image
 
 ```{code-cell} ipython3
-# votre code
+im = plt.imread("data/les-mines.jpg")
+im = np.array(im, copy=True)
 ```
 
 2. Slicer et afficher l'image en ne gardant qu'une ligne et qu'une colonne sur 2, 5, 10 et 20  
@@ -213,14 +252,45 @@ ou toute autre librairie d'affichage que vous aimez et/ou savez utiliser: `seabo
 ```
 
 ```{code-cell} ipython3
-# votre code
+im[::2,:,:]=(0,0,0)
+im[:,::2,:]=(0,0,0)
+plt.imshow(im)
+plt.show()
+
+im[::5,:,:]=(0,0,0)
+im[:,::5,:]=(0,0,0)
+plt.imshow(im)
+plt.show()
+
+im[::10,:,:]=(0,0,0)
+im[:,::10,:]=(0,0,0)
+plt.imshow(im)
+plt.show()
+
+im[::20,:,:]=(0,0,0)
+im[:,::20,:]=(0,0,0)
+plt.imshow(im)
+plt.show()
 ```
 
 3. Isoler le rectangle de `l` lignes et `c` colonnes en milieu d'image  
 affichez-le pour `(l, c) = (10, 20)`) puis `(l, c) = (100, 200)`
 
 ```{code-cell} ipython3
-# votre code
+im.shape
+```
+
+- Milieu des lignes 266
+- Milieu des colonnes 400
+
+```{code-cell} ipython3
+extrait1 = im[261:272,390:411,:]
+plt.imshow(extrait1)
+plt.show()
+
+extrait2 = im[216:317,300:501,:]
+plt.imshow(extrait2)
+plt.show()
 ```
 
 ## canaux RGB de l'image
@@ -230,14 +300,25 @@ affichez-le pour `(l, c) = (10, 20)`) puis `(l, c) = (100, 200)`
 1. Relire l'image
 
 ```{code-cell} ipython3
-# votre code
+im = plt.imread("data/les-mines.jpg")
+im = np.array(im, copy=True)
 ```
 
 2. Découpez l'image en ses trois canaux Red, Green et Blue
    (Il s'agit donc de construire trois tableaux de dimension 2)
 
 ```{code-cell} ipython3
-# votre code
+imR = im[:,:,0]
+plt.imshow(imR)
+plt.show()
+
+imG = im[:,:,1]
+plt.imshow(imG)
+plt.show()
+
+imB = im[:,:,2]
+plt.imshow(imB)
+plt.show()
 ```
 
 3. Afficher chaque canal avec `plt.imshow`; la couleur est-elle la couleur attendue ?  
@@ -256,7 +337,7 @@ affichez-le pour `(l, c) = (10, 20)`) puis `(l, c) = (100, 200)`
     ```
 
 ```{code-cell} ipython3
-# votre code
+
 ```
 
 4. Corrigez vos affichages si besoin
@@ -271,13 +352,25 @@ affichez-le pour `(l, c) = (10, 20)`) puis `(l, c) = (100, 200)`
    * puis par un carré blanc avec des rayures horizontales rouges de 1 pixel d'épaisseur
 
 ```{code-cell} ipython3
-# votre code
+im = plt.imread("data/les-mines.jpg")
+im = np.array(im, copy=True)
+im[333:, 600:,:]=(219, 112, 147)
+plt.imshow(im)
+plt.show()
+```
+
+```{code-cell} ipython3
+im[333:, 600:,:]=(255, 255, 255)
+im[333::10, 600:,:]=(255, 0, 0)
+plt.imshow(im)
+plt.show()
 ```
 
 6. enfin pour vérifier, affichez les 20 dernières lignes et colonnes du carré à rayures
 
 ```{code-cell} ipython3
-# votre code
+plt.imshow(im[513:, 780:,:])
+plt.show()
 ```
 
 ## transparence des images
@@ -297,19 +390,26 @@ affichez-le pour `(l, c) = (10, 20)`) puis `(l, c) = (100, 200)`
 1. Relire l'image initiale (sans la copier)
 
 ```{code-cell} ipython3
-# votre code
+im = plt.imread("data/les-mines.jpg")
 ```
 
 2. Créez un tableau vide de la même hauteur et largeur que l'image, du type de l'image initiale, mais avec un quatrième canal
 
 ```{code-cell} ipython3
-# votre code
+im.shape
+```
+
+```{code-cell} ipython3
+im_new = np.empty((533,800,4), dtype=np.uint8) #crée par défaut un tableau en float64
 ```
 
 3. Copiez-y l'image initiale, mettez le quatrième canal à `128` et affichez l'image
 
 ```{code-cell} ipython3
-# votre code
+im_new[:,:,:3] = im
+im_new[:,:,-1] = 128
+plt.imshow(im_new)
+plt.show()
 ```
 
 ## image en niveaux de gris en `float`
