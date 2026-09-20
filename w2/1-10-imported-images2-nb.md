@@ -135,14 +135,18 @@ on obtiendrait cette fois (observez la taille en pixels de l'image)
 
 ```{code-cell} ipython3
 # votre code
-
+from math import sqrt
 def rectangle_size(n):
     """
     return a tuple (lines, cols) for
     the smallest rectangle that contains n cells
     """
-    # your code goes here...
-    ...
+    if sqrt(n) #est un nombre entier on le garde et on renvoie le tuple (sqrt(n),  sqrt(n))
+    else: 
+        return (round(sqrt(n),0)+1, round(sqrt(n),0)+1) #on renvoie un carré de côté l'entier sup à la racine 
+
+#Sinon, on fait la décomposition de n en 2 facteurs premiers
+#ou s'aider du tableau donné ci-dessus pour comprendre la logique 
 ```
 
 2. écrivez la fonction `patchwork` telle que décrite en préambule
@@ -170,8 +174,8 @@ def patchwork(colors, side=10, background=[169, 169, 169]):
       the <n> colors are not enough to fill a rectangle
       here we use DarkGray as the default
     """
-    # your code here
-    ...
+    #faire appel à la première fonction pour déterminer la délimitation du rectangle 
+    #utiliser un array d'array pour colorier les zones 
 ```
 
 ```{code-cell} ipython3
