@@ -77,6 +77,10 @@ colors = [
 [255, 255, 0],
 [255, 0, 255],
 ]
+
+len(colors)
+background=[169, 169, 169]
+print(colors + [background])
 ```
 
 après quoi on appellerait la fonction `patchwork` - que vous allez devoir écrire - comme ceci:
@@ -136,17 +140,46 @@ on obtiendrait cette fois (observez la taille en pixels de l'image)
 ```{code-cell} ipython3
 # votre code
 from math import sqrt
-def rectangle_size(n):
+def rectangle_size_simplified(n): 
     """
     return a tuple (lines, cols) for
     the smallest rectangle that contains n cells
     """
-    if sqrt(n) #est un nombre entier on le garde et on renvoie le tuple (sqrt(n),  sqrt(n))
+    RC = int(round(sqrt(n),0)) # RC pour racine carrée (de n)
+    if n > RC*RC:
+        return (RC+1, RC+1)
     else: 
-        return (round(sqrt(n),0)+1, round(sqrt(n),0)+1) #on renvoie un carré de côté l'entier sup à la racine 
+        return (RC, RC)
+```
 
-#Sinon, on fait la décomposition de n en 2 facteurs premiers
-#ou s'aider du tableau donné ci-dessus pour comprendre la logique 
+```{code-cell} ipython3
+# Vérification
+for i in range (1,18):
+    print(i, rectangle_size_simplified(i))
+```
+
+```{code-cell} ipython3
+from math import sqrt
+def rectangle_size(n): 
+    """
+    return a tuple (lines, cols) for
+    the smallest rectangle that contains n cells
+    """
+    RC = int(round(sqrt(n),0)) # RC pour racine carrée (de n)
+    if n <= (RC-1)*RC:
+        return (RC-1, RC)
+    elif (RC-1)*RC < n <= RC*RC:
+        return (RC, RC)
+    elif RC*RC < n <= (RC+1)*RC:
+        return (RC, RC+1)
+    else:
+        return (RC+1, RC+1)
+```
+
+```{code-cell} ipython3
+# Vérification
+for i in range (1,18):
+ print(i, rectangle_size(i))
 ```
 
 2. écrivez la fonction `patchwork` telle que décrite en préambule
@@ -174,18 +207,27 @@ def patchwork(colors, side=10, background=[169, 169, 169]):
       the <n> colors are not enough to fill a rectangle
       here we use DarkGray as the default
     """
-    #faire appel à la première fonction pour déterminer la délimitation du rectangle 
-    #utiliser un array d'array pour colorier les zones 
+    
+    n = len(colors) # récupérer le nombre de couleurs
+    lines, cols = rectangle_size(n) # trouver le bon découpage
+    colormap = np.array(colors + [background]) # ajouter le background et convertir la lise en numpy array
+    
+    pattern = np.arange(lines*cols).reshape(lines, cols) 
+    pattern[pattern > n-1] = n # créer le tableau d'indiçage 
+    pattern = np.repeat(pattern, side, axis=0)
+    pattern = np.repeat(pattern, side, axis=1)
+    
+    return colormap[pattern] 
 ```
 
 ```{code-cell} ipython3
 # si vous voulez tester
-# plt.imshow(patchwork(colors));
+plt.imshow(patchwork(colors))
 ```
 
 ```{code-cell} ipython3
 # si vous voulez tester
-# plt.imshow(patchwork(colors+colors, side=10, background=[0, 0, 0]))
+plt.imshow(patchwork(colors+colors, side=10, background=[0, 0, 0]))
 ```
 
 ### v2 (optionnel)
@@ -381,8 +423,7 @@ def sepia(img): #img est une matrice (l, c, 3)
     M = np.transpose(M)
     P = np.dot(img, M)
     return np.clip(P, 0, 255).astype(np.uint8) 
-    #np.clip fonction qui borne les valeurs de P entre 0 et 255 car peut 
-    #dépasser avec le produit matriciel 
+    #np.clip fonction qui borne les valeurs de P entre 0 et 255 car on peut dépasser avec le produit matriciel 
 ```
 
 2. Passez l'image `data/les-mines.jpg` en sépia
@@ -390,7 +431,6 @@ def sepia(img): #img est une matrice (l, c, 3)
 ```{code-cell} ipython3
 # votre code
 img = plt.imread("data/les-mines.jpg")
-sepia(img)
 plt.imshow(sepia(img))
 ```
 
