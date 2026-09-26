@@ -101,25 +101,22 @@ plt.rcParams["figure.figsize"] = (4, 4) # (largeur, hauteur)
    ```
 
 ```{code-cell} ipython3
-im = np.zeros((91,91,3), dtype=np.uint8)
+im = np.empty((91,91,3), dtype=np.uint8) # empty pour non initialisé 
 plt.imshow(im)
-plt.show()
 ```
 
 2. Transformez le en tableau blanc (en un seul slicing) et affichez-le
 
 ```{code-cell} ipython3
-im[::]=255
+im[:]=255
 plt.imshow(im)
-plt.show()
 ```
 
 3. Transformez le en tableau vert (en un seul slicing) et affichez-le
 
 ```{code-cell} ipython3
-im[::,::,::]=(0,255,0)
+im[:]=(0,255,0)
 plt.imshow(im)
-plt.show()
 ```
 
 4. Affichez les valeurs RGB du premier pixel de l'image, et du dernier
@@ -132,10 +129,9 @@ print("RGB du dernier pixel: ",im[90,90,:])
 5. Faites un quadrillage d'une ligne bleue, toutes les 10 lignes et colonnes et affichez-le
 
 ```{code-cell} ipython3
-im[::,::10,::]=(0,0,255)
-im[::10,::,::]=(0,0,255)
+im[:,::10,:]=(0,0,255)
+im[::10,:,:]=(0,0,255)
 plt.imshow(im)
-plt.show()
 ```
 
 ## lecture d'une image en couleur
@@ -155,6 +151,8 @@ im = plt.imread("data/les-mines.jpg")
 im.flags.writeable
 ```
 
+L'objet n'est pas modifiable.
+
 ```{code-cell} ipython3
 im = np.array(im, copy=True)
 ```
@@ -163,7 +161,6 @@ im = np.array(im, copy=True)
 
 ```{code-cell} ipython3
 plt.imshow(im)
-plt.show()
 ```
 
 4. Quel est le type de l'objet créé ?
@@ -195,7 +192,7 @@ im.shape
 
 - 1 octet = 8 bits
 - 1 pixel = 3 entiers 8 bits non signés 
-- Conclusion: un pixel = 3 octets 
+- Conclusion: un pixel = 3 octets
 
 +++
 
@@ -205,6 +202,10 @@ im.shape
 ```{code-cell} ipython3
 im.dtype 
 ```
+
+Les pixels sont des entiers non-signés 8 bits.
+
++++
 
 9. Quelles sont ses valeurs maximale et minimale des pixels ?
 
@@ -220,10 +221,14 @@ Pour chaque canaux (RGB) des pixels
 10. Affichez le rectangle de 10 x 10 pixels en haut de l'image
 
 ```{code-cell} ipython3
-im = np.array(im, copy=True)
 im[:10,:10,::]=(0,0,0)
 plt.imshow(im)
-plt.show()
+```
+
+```{code-cell} ipython3
+# Si la question était plutôt d'afficher le rectangle de 91*91 pixels (on voit mieux)
+im[:91,:91,::]=(0,0,0)
+plt.imshow(im) 
 ```
 
 ## accès à des parties d'image
@@ -252,24 +257,22 @@ im = np.array(im, copy=True)
 ```
 
 ```{code-cell} ipython3
-im[::2,:,:]=(0,0,0)
-im[:,::2,:]=(0,0,0)
-plt.imshow(im)
+# Faut il repartir de l'image modifiée ou de l'image originelle ?
+
+im2 = im[::2,::2]
+plt.imshow(im2)
 plt.show()
 
-im[::5,:,:]=(0,0,0)
-im[:,::5,:]=(0,0,0)
-plt.imshow(im)
+im5 = im[::5,::5]
+plt.imshow(im5)
 plt.show()
 
-im[::10,:,:]=(0,0,0)
-im[:,::10,:]=(0,0,0)
-plt.imshow(im)
+im10 = im[::10,::10]
+plt.imshow(im10)
 plt.show()
 
-im[::20,:,:]=(0,0,0)
-im[:,::20,:]=(0,0,0)
-plt.imshow(im)
+im20 = im[::20,::20]
+plt.imshow(im20)
 plt.show()
 ```
 
@@ -336,14 +339,30 @@ plt.show()
     * du coup, voyez le paramètre `cmap=` de `plt.imshow`; et notamment avec `'Reds'`,  `'Greens'` ou  `'Blues'`
     ```
 
-```{code-cell} ipython3
++++
 
-```
+La couleur obtenue n'est à chaque fois pas celle attendue.
+
+imR, imG et imB sont des tableaux 2D, ils ne contiennent donc plus l'information permettant de dire à imshow à quel canal (R, V ou B) la valeur du triplet conservée correspond. 
+
++++
 
 4. Corrigez vos affichages si besoin
 
 ```{code-cell} ipython3
 # votre code
+
+imR = im[:,:,0]
+plt.imshow(imR, cmap = "Reds")
+plt.show()
+
+imG = im[:,:,1]
+plt.imshow(imG, cmap = "Greens")
+plt.show()
+
+imB = im[:,:,2]
+plt.imshow(imB, cmap = "Blues")
+plt.show()
 ```
 
 5. Copiez l'image, et dans la copie, remplacer le carré de taille `(200, 200)` en bas à droite:
@@ -356,21 +375,20 @@ im = plt.imread("data/les-mines.jpg")
 im = np.array(im, copy=True)
 im[333:, 600:,:]=(219, 112, 147)
 plt.imshow(im)
-plt.show()
 ```
+
+On obtient du rose.
 
 ```{code-cell} ipython3
 im[333:, 600:,:]=(255, 255, 255)
 im[333::10, 600:,:]=(255, 0, 0)
 plt.imshow(im)
-plt.show()
 ```
 
 6. enfin pour vérifier, affichez les 20 dernières lignes et colonnes du carré à rayures
 
 ```{code-cell} ipython3
 plt.imshow(im[513:, 780:,:])
-plt.show()
 ```
 
 ## transparence des images
@@ -400,6 +418,10 @@ im.shape
 ```
 
 ```{code-cell} ipython3
+im.dtype
+```
+
+```{code-cell} ipython3
 im_new = np.empty((533,800,4), dtype=np.uint8) #crée par défaut un tableau en float64
 ```
 
@@ -409,7 +431,6 @@ im_new = np.empty((533,800,4), dtype=np.uint8) #crée par défaut un tableau en 
 im_new[:,:,:3] = im
 im_new[:,:,-1] = 128
 plt.imshow(im_new)
-plt.show()
 ```
 
 ## image en niveaux de gris en `float`
