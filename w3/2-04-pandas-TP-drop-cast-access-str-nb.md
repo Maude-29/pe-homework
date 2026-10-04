@@ -73,8 +73,8 @@ df.head()
 ```{code-cell} ipython3
 # votre code
 df.columns
-# df = df.drop(columns=['Unnamed: 0'])
-df = df.drop(['Unnamed: 0'], axis=1)
+df = df.drop(columns=['Unnamed: 0'])
+# df = df.drop(['Unnamed: 0'], axis=1) 
 df.head()
 ```
 
@@ -112,10 +112,10 @@ df = df.dropna(axis=1, how="all")
    *en place* les lignes qui ont toutes leurs valeurs manquantes
    (et de nouveau sans faire référence à une ligne en particulier)
 
-+++
-
+```{code-cell} ipython3
 # votre code
 df.loc[88]
+```
 
 ```{code-cell} ipython3
 df = df.dropna(axis=0, how="all")
@@ -143,7 +143,13 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+df["Mass (lb)"].unique() 
 ```
+
+- On remarque que les éléments de la colonne des masses sont tous des entiers
+- Il y a également des caractères du type < et > 
+
++++
 
 ## 9. to_numeric
 
@@ -156,7 +162,18 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+df["Mass (lb) orig"] = df["Mass (lb)"].copy()
+df["Mass (lb)"] = pd.to_numeric(df["Mass (lb)"], errors="coerce") 
+# errors = "coerce" si une valeur ne peut pas être convertie (contient < ou >), elle est remplacée par NaN
+df['Mass (lb)'].dtype
+df['Mass (lb)'].info()
+df["Mass (lb)"].isna().sum() 
+# .isna() transforme chaque valeur en True si elle est manquante, sinon False
 ```
+
+Il y a 4 données manquantes dans cette colonnne 
+
++++
 
 ## 10. replace
 
@@ -185,6 +202,12 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+
+df["Mass (lb) orig"] = df["Mass (lb) orig"].str.replace("<", "")
+df["Mass (lb) orig"] = df["Mass (lb) orig"].str.replace(">", "")
+
+df["Mass (lb) orig"] = df["Mass (lb) orig"].astype(int)
+df["Mass (lb) orig"].dtype
 ```
 
 ## 11. convert
@@ -195,6 +218,9 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+
+df["Mass (kg)"] = (df["Mass (lb) orig"] / 2.205).round().astype(int)
+df["Mass (kg)"].head()
 ```
 
 ## 12. countries
@@ -209,6 +235,8 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+
+df["Country"].value_counts(normalize=True) * 100
 ```
 
 ## 13. total
@@ -218,6 +246,13 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+
+poids_total = df["Mass (kg)"].sum()
+print("Poids total :", poids_total, " kg")
+
+mask = df["Country"] == "United States"
+poids_USA = df[mask]["Mass (kg)"].sum()
+print("Poids United States :", poids_USA, " kg")
 ```
 
 ## 14. blame
@@ -231,6 +266,10 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+
+index = df["Mass (kg)"].idxmin()
+pays = df.loc[index, "Country"]
+print("Le pays qui a laissé l'objet le plus léger est :", pays)
 ```
 
 ## 15. memorial
@@ -245,7 +284,19 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
+
+if df["Artificial object"].str.contains("Memorial").any() == True: 
+    print("Il y a un mémorial sur la Lune")
+else: 
+    print("Il y a un mémorial sur la Lune")
+
+mask = df["Artificial object"].str.contains("Memorial")
+print("Le pays qui a mis ce mémorial est :", df.loc[mask, "Country"])
 ```
+
+Comment ne pas afficher l'index 83 de la ligne de notre pays?
+
++++
 
 ## 16.  tolist
 
@@ -257,6 +308,6 @@ Les masses sont des données string (chaînes de caractères)
 
 ```{code-cell} ipython3
 # votre code
-```
 
-***
+df["Artificial object"].tolist()
+```
