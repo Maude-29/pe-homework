@@ -73,13 +73,20 @@ and have a look at each of them: shape, first rows, types
 :tags: [level_basic]
 
 # your code
-df1 = pd.read_csv("data/life-expectancy.csv")
-df2 = pd.read_csv("data/gdp-per-capita.csv")
-df3 = pd.read_csv("data/population.csv")
-df4 = pd.read_csv("data/countries.csv")
+life = pd.read_csv("data/life-expectancy.csv")
+gdp = pd.read_csv("data/gdp-per-capita.csv")
+pop = pd.read_csv("data/population.csv")
+countries = pd.read_csv("data/countries.csv")
 
-for df in [df1, df2, df3, df4]:
-    print(df.info(), "\n")
+for name, df in [
+    ("life", life),
+    ("gdp", gdp),
+    ("pop", pop),
+    ("countries", countries)]:
+
+    print(f"\n DataFrame : {name}\n")
+    print(df.head(), "\n")
+    df.info()
 ```
 
 ### content
@@ -96,15 +103,20 @@ to better understand what we have at hand, answer these questions
 now could be the right time to check for `df.duplicated()`
 :::
 
-+++
+```{code-cell} ipython3
+print("Life :", len(life), "lignes")
+print("Gdp :", len(gdp), "lignes")
+print("Pop :", len(pop), "lignes")
+print("Countries :", len(countries), "lignes")
+```
 
-1.
-- life : 8060 rows 
-- gdp : 7724 rows
-- pop : 8060 rows
-- countries : 295 rows
+```{code-cell} ipython3
+print(life.duplicated(["country_code", "country"]).sum())
+print(life.duplicated(["country", "year"]).sum())
+```
 
-2. The rows country_code and country identify a measure uniquely, so we can merge it 
+Il y a 7800 doublons pour country_code et country => ils n'identifient donc pas une mesure de façon unique.
+Tandis que le tuple formé de country (ou country_code) et de year identifie une mesure de façon unique. Ce sont donc les 2 colonnes sur lesquelles fusionner.
 
 +++
 
@@ -143,16 +155,25 @@ consider using `symmetric_difference()` instead
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+keys_life = life.set_index(["country", "year"]).index
+keys_pop = pop.set_index(["country", "year"]).index
+keys_gdp = gdp.set_index(["country", "year"]).index
 
-print(df1.columns)
-print(df2.columns)
-print(df3.columns)
+print("life vs pop")
+print("Clés différentes :", len(keys_life.symmetric_difference(keys_pop)))
+print("Clés communes :", len(keys_life.intersection(keys_pop)))
+
+print("\nlife vs gdp")
+print("Clés différentes :", len(keys_life.symmetric_difference(keys_gdp)))
+print("Clés communes :", len(keys_life.intersection(keys_gdp)))
+
+common_keys = keys_life.intersection(keys_pop).intersection(keys_gdp)
+
+all_keys = keys_life.union(keys_pop).union(keys_gdp)
+
+print("\nInner merge :", len(common_keys), "clés communes")
+print("Outer merge :", len(all_keys), "clés distinctes au total")
 ```
-
-The first 3 keys of life, pop, and gdb are the same but the last one differs for each.
-
-+++
 
 ### merging the indicators
 
@@ -176,31 +197,32 @@ the `country` column is already in `life`, so you do not want to get it again fr
 :::
 
 ```{code-cell} ipython3
-:tags: [level_basic]
+indicators = (
+    life
+    .merge(gdp.drop(columns="country"), on=["country_code", "year"], how="outer")
+    .merge(pop.drop(columns="country"), on=["country_code", "year"], how="outer")
+)
+print(indicators.shape)          
+print(indicators.isna().sum())   
 
-# your code
-
-df1.merge(df2.merge(df3))
+indicators_inner = (
+    life
+    .merge(gdp.drop(columns="country"), on=["country_code", "year"])
+    .merge(pop.drop(columns="country"), on=["country_code", "year"])
+)
+print(indicators_inner.shape)    
 ```
 
-```{code-cell} ipython3
-df1.merge(df2.merge(df3, how='outer'), how='outer')
-```
+Les 335 valeurs manquantes de l’outer merge sont exactement les 335 clés de life absentes de gdp, et il n’en manque aucune pour life_exp ni population.
 
-```{code-cell} ipython3
-df13 = pd.merge(df1, df3, left_index=True, right_index=True)
-df13
-```
-
-```{code-cell} ipython3
-df_inner(
-    pd.merge(df1, df3, left_index=True, right_index=True)
-    .drop(columns='country_y")
-    .rename(columns={'country_x': 'country})
-```
++++
 
 which kind of merge one do you prefer here, and why ?  
 (for the rest of the assignment, we keep the outer version, to see the missing values)
+
++++
+
+Je préfère l’outer merge : il conserve les 335 pays-années pour lesquels on connaît l’espérance de vie et la population mais pas le PIB. L’inner merge les supprimerait de toutes les analyses, même celles qui n’utilisent pas le PIB. Les valeurs manquantes restent visibles (NaN), et pandas les ignore par défaut dans les moyennes.
 
 +++
 
@@ -224,9 +246,37 @@ maybe `Series.is_unique` can come in handy
 :::
 
 ```{code-cell} ipython3
-:tags: [level_basic]
+countries["country_code"].is_unique  
+# is_unique permet de vérifier si les valeurs d'un index ou d'une série (Series) sont toutes uniques, 
+# c'est-à-dire qu'aucune valeur n'est répétée
+```
 
-# your code
+Chaque ligne de indicators correspond à exactement une ligne de countries, et la fusion ne multiplie rien. On attend donc 8060 lignes (comme indicators) et 6 + 3 = 9 colonnes. 
+
+```{code-cell} ipython3
+C = set(countries["country_code"].unique())
+I = set(indicators["country_code"].unique())
+
+print("Nombre de pays différents dans countries :", len(C))
+print("Nombre de pays différents dans indicators :", len(I))
+
+if len(C)==len(I):
+    print("Countries et indicators contiennent les mêmes pays")
+elif len(C)>len(I): 
+    print("Il y a ", len(I.symmetric_difference(C)), "pays qui se retrouvent dans countries et pas dans indicators.")
+else: 
+    print("Il y a ", len(I.symmetric_difference(C)), "pays qui se retrouvent dans indicators et pas dans countries.")
+```
+
+```{code-cell} ipython3
+df = indicators.merge(countries, on="country_code", how="left")
+# left merge car on veut garder toutes les lignes de indicators et leur ajouter des informations
+# sans garder les 35 pays qui sont uniquement dans countries et pas dans indicators 
+print(df.shape)   
+```
+
+```{code-cell} ipython3
+df = df.drop(columns="name")
 ```
 
 ### cleaning
@@ -247,7 +297,18 @@ maybe `Series.is_unique` can come in handy
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+df["region"].value_counts()
+```
+
+"Aggregates" is not a region
+
+```{code-cell} ipython3
+df[df["region"] == "Aggregates"].head()
+```
+
+```{code-cell} ipython3
+df = df[df["region"] != "Aggregates"].copy()
+print(df.shape)   
 ```
 
 ### computing decade
@@ -266,7 +327,8 @@ the integer division `//` can help to compute the decade
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+df["decade"] = (df["year"] // 10 * 10).astype(int)
+df
 ```
 
 ## groupby
@@ -290,8 +352,21 @@ see the appendix on weighting by population for a better way
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+by_region = df.groupby("region")["life_exp"].mean()
+print(by_region.head(), "\n")
+
+by_region_decade = df.groupby(["region", "decade"])["life_exp"].mean()
+print(by_region_decade.head(), "\n")
+
+print(type(by_region_decade.index))
+print(by_region_decade.index.names)   
+
+by_region_decade.index.levels
 ```
+
+On y trouve deux listes : les 7 régions (triées par ordre alphabétique) et les décennies [1990, 2000, 2010, 2020]. 
+
++++
 
 ## pivot_table
 
@@ -302,7 +377,9 @@ build a table with one row per region, one column per decade, and the average li
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+pivoted = df.pivot_table(index="region", columns="decade", values="life_exp") 
+# la fonction d’agrégation par défaut est la moyenne
+pivoted
 ```
 
 ## stack and unstack
@@ -316,7 +393,9 @@ use `unstack()` on the former to obtain the latter, and check that they are equa
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+unstacked = by_region_decade.unstack()
+unstacked.equals(pivoted)                       
+pd.testing.assert_frame_equal(unstacked, pivoted)  
 ```
 
 and conversely, what does `stack()` do when applied on the pivot table ?
@@ -324,7 +403,7 @@ and conversely, what does `stack()` do when applied on the pivot table ?
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+pivoted.stack()
 ```
 
 so, in a nutshell: `pivot_table(index=A, columns=B, values=C)` is the same as `groupby([A, B])[C].mean().unstack()`  
@@ -362,7 +441,7 @@ the result should look like this
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+pivoted.T.plot(marker="o", figsize=(8, 5), xticks=pivoted.columns, ylabel="life expectancy")
 ```
 
 2. now a bar chart (`kind="barh"` or `df.plot.barh()`) of the average life expectancy per region for the most recent decade only (the column `2020`)
@@ -370,7 +449,7 @@ the result should look like this
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+pivoted[2020].sort_values().plot.barh(xlabel="", title="average life expectancy, 2020")
 ```
 
 3. finally, a scatter plot of `life_exp` against `gdp_per_capita` for year 2019, using `df.plot.scatter()`  
@@ -379,7 +458,7 @@ use a log scale on the x axis (`logx=True`) to make it readable
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+df[df["year"] == 2019].plot.scatter(x="gdp_per_capita", y="life_exp", logx=True)
 ```
 
 ## pairplot
@@ -406,7 +485,30 @@ you should produce something like this:
 ```{code-cell} ipython3
 :tags: [level_basic]
 
-# your code
+df_2019 = df[df["year"] == 2019]
+
+sns.pairplot(
+    df_2019,
+    vars=["life_exp", "gdp_per_capita", "population"],
+    hue="region",
+)
+# hue="region" colore chaque point selon sa région, avec une légende
+```
+
+```{code-cell} ipython3
+df_2019_log = df_2019.assign( 
+    log_gdp=np.log10(df_2019["gdp_per_capita"]),
+    log_pop=np.log10(df_2019["population"]),
+)
+
+# assign() crée les deux nouvelles colonnes sur une copie, sans modifier df. 
+# Il faut ensuite utiliser les nouveaux noms dans vars
+
+sns.pairplot(
+    df_2019_log,
+    vars=["life_exp", "log_gdp", "log_pop"],
+    hue="region",
+)
 ```
 
 ## optional: going further
