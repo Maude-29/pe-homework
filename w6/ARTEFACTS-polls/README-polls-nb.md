@@ -422,7 +422,7 @@ swing = gdf_data[gdf_data["NAME"].isin(SWING_STATES)]
 ```
 
 ```{code-cell} ipython3
-# calque 1 : la carte colorée de la 6.3
+# La carte colorée de la 6.3
 base = (
     alt.Chart(gdf_data)
     .mark_geoshape()
@@ -432,7 +432,7 @@ base = (
     )
 )
 
-# calque 2 : uniquement le contour des swing states
+# Uniquement le contour des swing states
 outline = (
     alt.Chart(swing)
     .mark_geoshape(fill=None, stroke="black", strokeWidth=2)
